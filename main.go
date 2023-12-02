@@ -12,6 +12,10 @@ func main() {
 	models.ConnectDatabase()
 
 	router.GET("/birthdays", controllers.GetBirthdays)
+	router.GET("/birthdays/:id", controllers.GetBirthdayByID)
+	router.POST("/birthdays", controllers.CreateBirthday)
+	router.PATCH("/birthdays/:id", controllers.UpdateBirthday)
+	router.DELETE("/birthdays/:id", controllers.DeleteBirthday)
 
 	router.Run("localhost:8080")
 }
