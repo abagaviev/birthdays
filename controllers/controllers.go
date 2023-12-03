@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/vincentxvega/birthdays/models"
@@ -48,10 +49,17 @@ func CreateBirthday(c *gin.Context) {
 		return
 	}
 
-	birthday := models.Birthday{Name: input.Name, Surname: input.Surname, DateOfBirth: input.DateOfBirth}
-	models.DB.Create(&birthday)
+	tm, err := time.Parse("2006-01-02", input.DateOfBirth)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid date format use YYYY-MM-DD format"})
+		return
+	} else {
+		birthday := models.Birthday{Name: input.Name, Surname: input.Surname, DateOfBirth: tm}
+		models.DB.Create(&birthday)
 
-	c.JSON(http.StatusOK, gin.H{"data": birthday})
+		c.JSON(http.StatusOK, gin.H{"data": birthday})
+	}
+
 }
 
 // Update birthday by ID
