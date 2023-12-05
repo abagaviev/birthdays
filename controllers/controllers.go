@@ -12,15 +12,16 @@ type CreateBirthdayInput struct {
 	Name        string `json:"name" binding:"required"`
 	Surname     string `json:"surname" binding:"required"`
 	DateOfBirth string `json:"date_of_birth" binding:"required"`
+	Phone       string `json:"phone" binding:"required"`
 }
 
 type UpdateBirthdayInput struct {
 	Name        string `json:"name"`
 	Surname     string `json:"surname"`
 	DateOfBirth string `json:"date_of_birth"`
+	Phone       string `json:"phone"`
 }
 
-// Get all birthdays
 func GetBirthdays(c *gin.Context) {
 	var birthdays []models.Birthday
 	models.DB.Find(&birthdays)
@@ -28,7 +29,6 @@ func GetBirthdays(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"data": birthdays})
 }
 
-// Get book by id
 func GetBirthdayByID(c *gin.Context) {
 	var birthday models.Birthday
 
@@ -39,8 +39,6 @@ func GetBirthdayByID(c *gin.Context) {
 	c.IndentedJSON(http.StatusOK, gin.H{"data": birthday})
 }
 
-// Create birthday
-
 func CreateBirthday(c *gin.Context) {
 	// Validate input
 	var input CreateBirthdayInput
@@ -49,12 +47,19 @@ func CreateBirthday(c *gin.Context) {
 		return
 	}
 
+	//checking unique "phone" field
+	var birthday models.Birthday
+	if err := models.DB.Where("phone = ?", input.Phone).First(&birthday).Error; err == nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "phone already exist"})
+		return
+	}
+
 	tm, err := time.Parse("2006-01-02", input.DateOfBirth)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid date format use YYYY-MM-DD format"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid date format, use YYYY-MM-DD format"})
 		return
 	} else {
-		birthday := models.Birthday{Name: input.Name, Surname: input.Surname, DateOfBirth: tm}
+		birthday := models.Birthday{Name: input.Name, Surname: input.Surname, DateOfBirth: tm, Phone: input.Phone}
 		models.DB.Create(&birthday)
 
 		c.JSON(http.StatusOK, gin.H{"data": birthday})
@@ -78,9 +83,15 @@ func UpdateBirthday(c *gin.Context) {
 		return
 	}
 
-	models.DB.Model(&birthday).Updates(input)
+	_, err := time.Parse("2006-01-02", input.DateOfBirth)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid date format, use YYYY-MM-DD format"})
+		return
+	} else {
+		models.DB.Model(&birthday).Updates(input)
 
-	c.JSON(http.StatusOK, gin.H{"data": birthday})
+		c.JSON(http.StatusOK, gin.H{"data": birthday})
+	}
 }
 
 func DeleteBirthday(c *gin.Context) {

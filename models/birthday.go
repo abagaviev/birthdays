@@ -7,4 +7,5 @@ type Birthday struct {
 	Name        string    `json:"name"`
 	Surname     string    `json:"surname"`
 	DateOfBirth time.Time `json:"date_of_birth"`
+	Phone       string    `json:"phone" gorm:"unique"`
 }
