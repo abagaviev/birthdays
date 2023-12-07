@@ -23,10 +23,24 @@ type UpdateBirthdayInput struct {
 }
 
 func GetBirthdays(c *gin.Context) {
+	name := c.Query("name")
 	var birthdays []models.Birthday
-	models.DB.Find(&birthdays)
 
-	c.JSON(http.StatusOK, gin.H{"data": birthdays})
+	if name != "" {
+		if err := models.DB.Where("name = ?", name).Find(&birthdays).Error; err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "DB query error"})
+			return
+		}
+	} else {
+		models.DB.Find(&birthdays)
+	}
+
+	if len(birthdays) > 0 {
+		c.JSON(http.StatusOK, gin.H{"data": birthdays})
+	} else {
+		c.JSON(http.StatusOK, gin.H{"data": "birthdays not found"})
+	}
+
 }
 
 func GetBirthdayByID(c *gin.Context) {
@@ -36,7 +50,7 @@ func GetBirthdayByID(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "birthday not found!"})
 		return
 	}
-	c.IndentedJSON(http.StatusOK, gin.H{"data": birthday})
+	c.JSON(http.StatusOK, gin.H{"data": birthday})
 }
 
 func CreateBirthday(c *gin.Context) {
